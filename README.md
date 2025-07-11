@@ -76,11 +76,6 @@ Este proyecto implementa un sistema automatizado para la gestión de cartera usa
 
 ---
 
-## 📸 Screenshots
-
-> Agrega capturas de tu n8n, respuestas en Telegram o Supabase para mejor documentación visual.
-
----
 
 ## 📄 Licencia
 
