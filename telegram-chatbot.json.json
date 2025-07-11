@@ -1,0 +1,819 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "74e69d49-7a62-474b-b0e7-1d9834d459df",
+      "name": "Telegram Trigger",
+      "webhookId": "7ab5909a-17f7-4c9c-9738-634f6b7f17c2",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZbxMy8o0aiLwtfSf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9cdef05e-62e1-4ce8-ad91-d4e34358c316",
+              "name": "mensaje_limpio",
+              "value": "={{ $json.message.text.trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "7fea30a4-d5a7-4ccf-bd83-cd10492bfa98",
+              "name": "user_id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5418e635-f565-47d2-8386-d485f17dbcec",
+              "name": "chat_id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "cc6569c5-a3a1-4bbe-947c-ebda68f6dac6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json['chat_id'] }}",
+        "text": "👋 ¡Hola! Bienvenido al asistente de cartera.  Por favor, ingresa tu número de cédula para continuar 🧾.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1020,
+        420
+      ],
+      "id": "3ce9ac42-f6a0-4603-9c13-ceb0c362b9d7",
+      "name": "Send a text message",
+      "webhookId": "7e4623b2-d212-46a5-93d2-8988ee9ee7fd",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZbxMy8o0aiLwtfSf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6635c3a4-15a9-4bdc-8325-ec61709d4937",
+              "leftValue": "={{ /^(\\d{6,10})$/.test($json.mensaje_limpio?.trim()) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        420,
+        0
+      ],
+      "id": "f5f7bc1d-3e5a-47ce-b1a6-442ae0273d2d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/clientes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "identificacion",
+              "value": "=eq.{{$json.mensaje_limpio.trim()}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        -200
+      ],
+      "id": "b06cd479-c9e7-41e8-9f0e-8c6a18980d06",
+      "name": "HTTP Request",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c691f3a3-b9a7-464c-8362-83c37f1fac88",
+              "leftValue": "={{ Object.keys($json).length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1000,
+        -200
+      ],
+      "id": "79a3d5eb-1136-4dc7-8dba-a8e76ddf8c21",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "✅ Hemos verificado tu cédula.  ¿Qué deseas consultar? \n - Escribe **saldo** para conocer tu saldo pendiente. \n - Escribe **facturas** para ver tus facturas vencidas.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1260,
+        -280
+      ],
+      "id": "bea01f0a-223f-42ed-aed5-29c1be37f5d5",
+      "name": "Send a text message1",
+      "webhookId": "c9bdbb8e-f46d-4e40-98e8-535b2f7757ab",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZbxMy8o0aiLwtfSf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ab3fcb37-d5e0-44bc-8ab2-1e0a6f0e115b",
+              "leftValue": "={{ $json.mensaje_limpio }}",
+              "rightValue": "factura",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        100
+      ],
+      "id": "6e877c4e-726c-480f-8453-adf0a7a06bf5",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c193b12d-6338-4783-8256-6db681f6e410",
+              "leftValue": "={{ $('If').item.json.mensaje_limpio }}",
+              "rightValue": "saldo",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        260
+      ],
+      "id": "d8eec48e-e88f-4e00-8d26-4fc4fde0fe39",
+      "name": "If3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If').item.json.chat_id }}",
+        "text": "❌ No encontramos tu cédula en nuestro sistema.   Por favor, revisa que esté bien escrita y vuelve a ingresarla.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        -120
+      ],
+      "id": "9337cb56-f7a9-4a7f-ba7f-01f260f6d1bb",
+      "name": "Send a text message2",
+      "webhookId": "c9bdbb8e-f46d-4e40-98e8-535b2f7757ab",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZbxMy8o0aiLwtfSf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/sesiones_telegram",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\":{{ $('If').item.json.chat_id }} ,\n  \"cedula\":{{ $('If').item.json.mensaje_limpio }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1480,
+        -280
+      ],
+      "id": "ca758f35-2fad-4fee-97a6-4cf749d824b0",
+      "name": "HTTP Request1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/sesiones_telegram",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "=eq.{{$json.chat_id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        40
+      ],
+      "id": "f7711066-3c51-4ec7-8be5-88e860734d55",
+      "name": "HTTP Request2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/clientes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "identificacion",
+              "value": "=eq.{{ $json.cedula }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        40
+      ],
+      "id": "93242446-f5b7-4734-b649-1e189aa335e7",
+      "name": "HTTP Request3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/facturas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "cliente_id",
+              "value": "=eq.{{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        40
+      ],
+      "id": "2d91b83a-629f-4da9-94ab-5aa565be24ce",
+      "name": "HTTP Request4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If2').item.json.chat_id }}",
+        "text": "=📄 Factura encontrada:\n\n🔢 Número: {{$json.numero_factura}}  \n📅 Fecha de emisión: {{ new Date($json.fecha_emision).toLocaleDateString(\"es-CO\") }}  \n⏳ Vencimiento: {{ new Date($json.fecha_vencimiento).toLocaleDateString(\"es-CO\") }}  \n💰 Total: ${{ $json.total.toLocaleString(\"es-CO\") }}  \n⚠️ Estado: *{{$json.estado}}*\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1460,
+        40
+      ],
+      "id": "a941d277-f69b-4015-ba98-a3f4d5a8ca8d",
+      "name": "Send a text message3",
+      "webhookId": "7e4623b2-d212-46a5-93d2-8988ee9ee7fd",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZbxMy8o0aiLwtfSf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/sesiones_telegram?chat_id=eq.{{ $('If2').item.json.chat_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        40
+      ],
+      "id": "ab3b3172-db6b-405f-907d-454c6ac52dd7",
+      "name": "HTTP Request5",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/sesiones_telegram",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "=eq.{{$json.chat_id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        240
+      ],
+      "id": "ee492d72-a581-4410-890c-67e50d8c22a8",
+      "name": "HTTP Request6",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/clientes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "identificacion",
+              "value": "=eq.{{ $json.cedula }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        240
+      ],
+      "id": "5d7d02e0-e4d7-429f-94ce-b2e68dbb7000",
+      "name": "HTTP Request7",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/estados_cuenta",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "cliente_id",
+              "value": "=eq.{{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        240
+      ],
+      "id": "959f8034-9c1e-4d14-95c7-70bc1f960a51",
+      "name": "HTTP Request8",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('If2').item.json.chat_id }}",
+        "text": "=💰 Tu saldo pendiente es de **${{ $json.saldo_total.toLocaleString('es-CO') }} COP**.\n\n📅 Última actualización: {{ new Date($json.ultima_actualizacion).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) }}.\n\n\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1540,
+        240
+      ],
+      "id": "19a2d7c5-8eab-4ea6-859e-eaf6f3b6a8dc",
+      "name": "Send a text message4",
+      "webhookId": "7e4623b2-d212-46a5-93d2-8988ee9ee7fd",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZbxMy8o0aiLwtfSf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://votnfkmawcqbpbcqpefy.supabase.co/rest/v1/sesiones_telegram?chat_id=eq.{{ $('If2').item.json.chat_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1740,
+        240
+      ],
+      "id": "49dbce61-e372-43af-aefd-a4b1cc3565c9",
+      "name": "HTTP Request9",
+      "credentials": {
+        "supabaseApi": {
+          "id": "opHtqMLoOO6TFYcu",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request7": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request8": {
+      "main": [
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6cd57980-88c9-4578-ad02-98fded8f9793",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ebd67138ea22453836c49c5a057ecc82555d4c9e49910d6e1f09a60cd711275d"
+  },
+  "id": "FVcR8GXoshZycdrG",
+  "tags": []
+}
